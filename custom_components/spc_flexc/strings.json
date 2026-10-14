@@ -1,0 +1,144 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Vanderbilt SPC panel",
+        "description": "Enter the values you set for the Home Assistant receiver on the panel (see the setup guide). Home Assistant then opens the port and waits for the panel to connect.",
+        "data": {
+          "port": "Port",
+          "encryption_key": "Encryption key",
+          "account_code": "SPT account code",
+          "rct_id": "RCT ID",
+          "username": "Panel username",
+          "password": "Web password"
+        },
+        "data_description": {
+          "port": "The TCP port Home Assistant listens on; the same as the receiver's port on the panel (52000 by default).",
+          "encryption_key": "The 64 hexadecimal characters set as fixed encryption key on the panel.",
+          "account_code": "The SPT account code of the receiver on the panel.",
+          "rct_id": "The RCT ID of the receiver on the panel.",
+          "username": "A panel user with the Manager profile.",
+          "password": "That user's web password (not the PIN)."
+        }
+      },
+      "reconfigure": {
+        "title": "Vanderbilt SPC panel",
+        "description": "Enter the values you set for the Home Assistant receiver on the panel (see the setup guide). Home Assistant then opens the port and waits for the panel to connect.",
+        "data": {
+          "port": "Port",
+          "encryption_key": "Encryption key",
+          "account_code": "SPT account code",
+          "rct_id": "RCT ID",
+          "username": "Panel username",
+          "password": "Web password"
+        },
+        "data_description": {
+          "port": "The TCP port Home Assistant listens on; the same as the receiver's port on the panel (52000 by default).",
+          "encryption_key": "The 64 hexadecimal characters set as fixed encryption key on the panel.",
+          "account_code": "The SPT account code of the receiver on the panel.",
+          "rct_id": "The RCT ID of the receiver on the panel.",
+          "username": "A panel user with the Manager profile.",
+          "password": "That user's web password (not the PIN)."
+        }
+      }
+    },
+    "error": {
+      "invalid_key": "The key must be 64 hexadecimal characters (0-9, a-f).",
+      "invalid_username": "Enter the username, without double quotes.",
+      "invalid_password": "Enter the web password, without double quotes.",
+      "port_in_use": "The port is used by another program on the Home Assistant host.",
+      "port_used_by_entry": "Another panel is already set up on this port.",
+      "panel_not_connected": "The panel did not connect. Check the receiver's IP address and port on the panel, the encryption key, account code and RCT ID, and that the panel is not in engineer mode.",
+      "invalid_auth": "The panel refused the user. Check the username, the web password and that the user has the Manager profile.",
+      "unknown": "Unexpected error."
+    },
+    "abort": {
+      "already_configured": "This panel is already configured.",
+      "reconfigure_successful": "The settings were updated.",
+      "reauth_successful": "The credentials were updated.",
+      "unique_id_mismatch": "This is a different panel."
+    },
+    "progress": {
+      "wait_for_panel": "Waiting up to {seconds} seconds for the panel to connect to port {port}. The panel connects on its own once its receiver points at Home Assistant."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "SPC options",
+        "data": {
+          "code": "Alarm code in Home Assistant",
+          "code_arm_required": "Require the code to arm",
+          "force_arm": "Force arming (ignore open zones)",
+          "scan_interval": "Polling interval"
+        },
+        "data_description": {
+          "code": "Asked for in Home Assistant before disarming. It is not the panel's PIN; the integration logs in to the panel as its own user. Leave empty for no code.",
+          "force_arm": "Uses the *_forced commands, which arm even when zones are open.",
+          "scan_interval": "Events arrive at once over the WebSocket; polling catches what the panel does not report as an event."
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "zone_problem": {
+        "name": "{zone} problem"
+      },
+      "panel_connected": {
+        "name": "Panel connected"
+      }
+    },
+    "sensor": {
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "aux_voltage": {
+        "name": "Aux voltage"
+      },
+      "aux_current": {
+        "name": "Aux current"
+      },
+      "ac_frequency": {
+        "name": "Mains frequency"
+      },
+      "last_event": {
+        "name": "Last event"
+      },
+      "door_status": {
+        "name": "{door} door status",
+        "state": {
+          "ok": "OK",
+          "open_too_long": "Open too long",
+          "left_open": "Left open",
+          "forced": "Forced",
+          "tamper": "Tamper",
+          "offline": "Offline"
+        }
+      }
+    },
+    "switch": {
+      "zone_inhibit": {
+        "name": "{zone} inhibit"
+      },
+      "zone_isolate": {
+        "name": "{zone} isolate"
+      }
+    },
+    "lock": {
+      "door": {
+        "name": "{door} door"
+      }
+    },
+    "button": {
+      "clear_alerts": {
+        "name": "Clear alerts"
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_code": {
+      "message": "Wrong alarm code."
+    }
+  }
+}

@@ -1,0 +1,144 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Vanderbilt SPC-panel",
+        "description": "Ange samma värden som för Home Assistant-mottagaren i panelen (se installationsguiden). Home Assistant öppnar sedan porten och väntar på att panelen ansluter.",
+        "data": {
+          "port": "Port",
+          "encryption_key": "Krypteringsnyckel",
+          "account_code": "SPT-kontokod",
+          "rct_id": "RCT ID",
+          "username": "Panelanvändare",
+          "password": "Webblösenord"
+        },
+        "data_description": {
+          "port": "TCP-porten Home Assistant lyssnar på; samma som mottagarens port i panelen (52000 som standard).",
+          "encryption_key": "De 64 hextecken som är satta som fast krypteringsnyckel i panelen.",
+          "account_code": "Mottagarens SPT-kontokod i panelen.",
+          "rct_id": "Mottagarens RCT ID i panelen.",
+          "username": "En panelanvändare med profilen Manager.",
+          "password": "Användarens webblösenord (inte PIN-koden)."
+        }
+      },
+      "reconfigure": {
+        "title": "Vanderbilt SPC-panel",
+        "description": "Ange samma värden som för Home Assistant-mottagaren i panelen (se installationsguiden). Home Assistant öppnar sedan porten och väntar på att panelen ansluter.",
+        "data": {
+          "port": "Port",
+          "encryption_key": "Krypteringsnyckel",
+          "account_code": "SPT-kontokod",
+          "rct_id": "RCT ID",
+          "username": "Panelanvändare",
+          "password": "Webblösenord"
+        },
+        "data_description": {
+          "port": "TCP-porten Home Assistant lyssnar på; samma som mottagarens port i panelen (52000 som standard).",
+          "encryption_key": "De 64 hextecken som är satta som fast krypteringsnyckel i panelen.",
+          "account_code": "Mottagarens SPT-kontokod i panelen.",
+          "rct_id": "Mottagarens RCT ID i panelen.",
+          "username": "En panelanvändare med profilen Manager.",
+          "password": "Användarens webblösenord (inte PIN-koden)."
+        }
+      }
+    },
+    "error": {
+      "invalid_key": "Nyckeln ska vara 64 hextecken (0-9, a-f).",
+      "invalid_username": "Ange användarnamnet, utan citattecken.",
+      "invalid_password": "Ange webblösenordet, utan citattecken.",
+      "port_in_use": "Porten används av ett annat program på Home Assistant-datorn.",
+      "port_used_by_entry": "En annan panel är redan inställd på den här porten.",
+      "panel_not_connected": "Panelen anslöt inte. Kontrollera mottagarens IP-adress och port i panelen, krypteringsnyckeln, kontokoden och RCT ID, och att panelen inte är i Engineer-läge.",
+      "invalid_auth": "Panelen nekade användaren. Kontrollera användarnamnet, webblösenordet och att användaren har profilen Manager.",
+      "unknown": "Oväntat fel."
+    },
+    "abort": {
+      "already_configured": "Den här panelen är redan inställd.",
+      "reconfigure_successful": "Inställningarna uppdaterades.",
+      "reauth_successful": "Inloggningsuppgifterna uppdaterades.",
+      "unique_id_mismatch": "Det här är en annan panel."
+    },
+    "progress": {
+      "wait_for_panel": "Väntar upp till {seconds} sekunder på att panelen ansluter till port {port}. Panelen ansluter av sig själv när dess mottagare pekar på Home Assistant."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Inställningar för SPC",
+        "data": {
+          "code": "Larmkod i Home Assistant",
+          "code_arm_required": "Kräv koden för att larma på",
+          "force_arm": "Tvångspålarmning (ignorera öppna sektioner)",
+          "scan_interval": "Pollningsintervall"
+        },
+        "data_description": {
+          "code": "Efterfrågas i Home Assistant innan avlarmning. Det är inte centralens PIN – integrationen loggar in i panelen som en egen användare. Lämna tomt för ingen kod.",
+          "force_arm": "Använder *_forced-kommandona, som larmar på även när sektioner är öppna.",
+          "scan_interval": "Händelser kommer direkt via WebSocket; pollningen fångar det centralen inte rapporterar som händelse."
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "zone_problem": {
+        "name": "{zone} problem"
+      },
+      "panel_connected": {
+        "name": "Panel ansluten"
+      }
+    },
+    "sensor": {
+      "battery_voltage": {
+        "name": "Batterispänning"
+      },
+      "aux_voltage": {
+        "name": "Aux-spänning"
+      },
+      "aux_current": {
+        "name": "Aux-ström"
+      },
+      "ac_frequency": {
+        "name": "Nätfrekvens"
+      },
+      "last_event": {
+        "name": "Senaste händelse"
+      },
+      "door_status": {
+        "name": "{door} dörrstatus",
+        "state": {
+          "ok": "OK",
+          "open_too_long": "Öppen för länge",
+          "left_open": "Lämnad öppen",
+          "forced": "Uppbruten",
+          "tamper": "Sabotage",
+          "offline": "Offline"
+        }
+      }
+    },
+    "switch": {
+      "zone_inhibit": {
+        "name": "{zone} förbikoppla"
+      },
+      "zone_isolate": {
+        "name": "{zone} isolera"
+      }
+    },
+    "lock": {
+      "door": {
+        "name": "{door} dörr"
+      }
+    },
+    "button": {
+      "clear_alerts": {
+        "name": "Kvittera larm"
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_code": {
+      "message": "Fel larmkod."
+    }
+  }
+}

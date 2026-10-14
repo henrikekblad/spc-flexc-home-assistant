@@ -1,0 +1,12 @@
+{
+  "domain": "spc_flexc",
+  "name": "SPC FlexC",
+  "codeowners": ["@henrikekblad"],
+  "config_flow": true,
+  "documentation": "https://github.com/henrikekblad/spc-flexc-home-assistant",
+  "integration_type": "hub",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/henrikekblad/spc-flexc-home-assistant/issues",
+  "requirements": [],
+  "version": "0.1.0"
+}
