@@ -39,7 +39,10 @@ The panel pushes its events as they happen, and the integration also reads the f
 
 ## Installation
 
-1. In HACS, add this repository as a custom repository (category *Integration*).
+[![Open your Home Assistant instance and open this repository in HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=henrikekblad&repository=spc-flexc-home-assistant&category=integration)
+
+1. In HACS, add this repository as a custom repository (category *Integration*), or use the button
+   above.
 2. Install **SPC FlexC** and restart Home Assistant.
 
 ## Setup
@@ -47,13 +50,16 @@ The panel pushes its events as they happen, and the integration also reads the f
 1. Set up the panel as described in [docs/panel-setup.md](docs/panel-setup.md): a user for Home
    Assistant, an event profile, and a FlexC receiver pointing at Home Assistant with a fixed
    encryption key.
-2. In Home Assistant, go to **Settings → Devices & services → Add integration → SPC FlexC** and
-   enter the values you set on the panel:
+2. In Home Assistant, go to **Settings → Devices & services → Add integration → SPC FlexC** (or use
+   the button below) and enter the values you set on the panel:
    - the port,
    - the encryption key,
    - the SPT account code,
    - the RCT ID,
    - the panel user's name and web password.
+
+   [![Open your Home Assistant instance and start setting up SPC FlexC.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=spc_flexc)
+
 3. Home Assistant opens the port and waits for the panel to connect. Once the panel has
    answered, the integration is added.
 
