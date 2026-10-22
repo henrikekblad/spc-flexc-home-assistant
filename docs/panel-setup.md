@@ -90,6 +90,23 @@ Open **Advanced ATP Settings** and set:
 
 The integration needs the same key.
 
+Make a random key on your own computer rather than on a website, for example:
+
+```sh
+# Linux, macOS
+openssl rand -hex 32
+# or, with Python
+python3 -c "import secrets; print(secrets.token_hex(32))"
+```
+
+```powershell
+# Windows (PowerShell 7)
+[Convert]::ToHexString([Security.Cryptography.RandomNumberGenerator]::GetBytes(32)).ToLower()
+```
+
+Each prints 64 hexadecimal characters (32 random bytes). Keep the key somewhere safe: anyone who has
+it can read the connection between the panel and Home Assistant.
+
 ![Fixed encryption key](images/07-encryption.png)
 
 One way to make a random key on any computer with Python is
