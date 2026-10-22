@@ -23,8 +23,10 @@ Log in to the panel's web interface with an engineer code and choose **Full Engi
 
 Add a new user, for example `homeassistant`, with the **Manager** user profile.
 
-- Use letters, digits and common symbols; the panel tells you if something is not allowed.
-- A double quote (`"`) cannot be used in the username or password.
+- The username must be 4–16 characters and the web password 6–16 characters. A longer password
+  may still work in the web interface, but the panel then refuses it from Home Assistant
+  ("54: Authentication failed").
+- Use only letters, digits and `. ! @ # $ % _ + - = ; < > ?` in both.
 
 ![A new user with the Manager profile](images/02-user.png)
 
