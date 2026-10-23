@@ -70,6 +70,17 @@ def test_error_reply(code: int, auth: bool) -> None:
     assert err.value.is_auth_error is auth
 
 
+def test_successful_reply_without_elements_is_empty() -> None:
+    # A panel without mapping gates (or doors) answers OK with nothing in it.
+    xml = b'<FLEXML_REPLY VER="1.0"><REPLY_GET_MG_STATUS CMD_RESULT="OK"/></FLEXML_REPLY>'
+    assert reply_to_dict(xml, "GET_MG_STATUS", "MG_STATUS", TZ) == {}
+    xml = (
+        b'<FLEXML_REPLY VER="1.0"><REPLY_GET_DOOR_STATUS CMD_RESULT="OK">'
+        b"</REPLY_GET_DOOR_STATUS></FLEXML_REPLY>"
+    )
+    assert reply_to_dict(xml, "GET_DOOR_STATUS", "DOOR_STATUS", TZ) == {}
+
+
 def test_missing_element_and_garbage() -> None:
     with pytest.raises(PanelError, match="102"):
         reply_to_dict(b"<FLEXML_REPLY/>", "GET_ZONE_STATUS", "ZONE_STATUS", TZ)

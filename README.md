@@ -56,7 +56,7 @@ The panel pushes its events as they happen, and the integration also reads the f
    - the encryption key,
    - the SPT account code,
    - the RCT ID,
-   - the panel user's name and web password.
+   - the panel user's name and web password (or the command profile's user, see the setup guide).
 
    [![Open your Home Assistant instance and start setting up SPC FlexC.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=spc_flexc)
 

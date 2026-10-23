@@ -189,9 +189,11 @@ class SpcFlexcClient:
             raise SpcPanelNotConnected("the panel is not connected") from err
         except FlexcTimeout as err:
             raise SpcConnectionError("the panel did not answer") from err
+        xml = commands.reply_xml(reply)
         try:
-            return reply_to_dict(commands.reply_xml(reply), cmd.name, cmd.reply_element, self._tz)
+            return reply_to_dict(xml, cmd.name, cmd.reply_element, self._tz)
         except PanelError as err:
+            _LOGGER.debug("Command %s failed with %s; reply: %r", cmd.name, err, xml[:500])
             if err.is_auth_error:
                 raise SpcAuthError(str(err)) from err
             raise SpcApiError(str(err.code), err.message) from err

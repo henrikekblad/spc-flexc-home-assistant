@@ -36,6 +36,18 @@ password yet. To set one, log in to the web interface as that user with its PIN,
 
 ![Setting the user's web password](images/03-web-password.png)
 
+### Alternative: the command profile's user
+
+If the panel keeps refusing the user ("54: Authentication failed"), use the user of the FlexC
+command profile instead. Under **Communications → FlexC → Command Profile**, the profile used by
+your receiver (normally **Default Commands**) has the authentication mode **Command User or Panel
+User** and its own **Command User Name** (often `FlexC`) and **Command Password**. Enter that name
+and password in the integration.
+
+The built-in profile is read-only. To choose your own command user and password, open it, click
+**Replicate**, set them in the copy, and select the copy as the Command Profile of your Home
+Assistant receiver (step 4).
+
 ## 3. Add an event profile
 
 Go to **Communications → FlexC → Event Profiles** and click **Add**.

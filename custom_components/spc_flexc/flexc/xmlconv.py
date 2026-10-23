@@ -244,6 +244,7 @@ def reply_to_dict(xml: bytes, cmd: str, reply_element: str, tz: tzinfo) -> dict[
     root = parse(xml)
     if root is None:
         raise PanelError(102)
+    answered = False
     if (hit := _find(root, f"REPLY_{cmd}")) is not None:
         reply = hit[1]
         if reply.attr("CMD_RESULT") == "ERROR":
@@ -253,7 +254,12 @@ def reply_to_dict(xml: bytes, cmd: str, reply_element: str, tz: tzinfo) -> dict[
                 code = 10
             if code != 0:
                 raise PanelError(code)
+        answered = True
     if (hit := _find(root, reply_element)) is None:
+        # A successful reply without any elements: the panel has none of them (e.g. no mapping
+        # gates or doors configured).
+        if answered:
+            return {}
         raise PanelError(102)
     parent = hit[0]
     return _group([c for c in parent.children if c.name == reply_element], tz)
