@@ -45,6 +45,11 @@ The panel pushes its events as they happen, and the integration also reads the f
    above.
 2. Install **SPC FlexC** and restart Home Assistant.
 
+> [!NOTE]
+> Another, independent FlexC integration, [minimicro34/ha-spc-flexc](https://github.com/minimicro34/ha-spc-flexc),
+> is in the HACS default list. Both install into `custom_components/spc_flexc`, so only one of
+> them can be installed at a time.
+
 ## Setup
 
 1. Set up the panel as described in [docs/panel-setup.md](docs/panel-setup.md): a user for Home
