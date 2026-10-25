@@ -19,8 +19,9 @@ Header layout (all integers big-endian):
     0x20  2 bytes        flags (kept as received)
     0x22  u8             message type
     0x23  u8             reserved
-    0x24  u32            payload length (without the zero padding)
-    0x28  4 bytes        field 0x28 (first byte 1 in requests from the gateway)
+    0x24  u32            payload length (without the zero padding); for a reply split over
+                         several Data frames, the length of the whole reply
+    0x28  4 bytes        field 0x28 (first byte 1 in requests, and in the first frame of a reply)
     0x2C  20 bytes       SHA-1
 """
 
@@ -74,6 +75,7 @@ class MsgType(IntEnum):
     EVENT_ACK = 0x61
     DATA = 0x80
     DATA_ACK = 0x81
+    ERROR = 0xFF
 
 
 def is_ack_echo(msg_type: int) -> bool:
@@ -152,6 +154,9 @@ class Frame:
 
     header: Header
     payload: bytes = b""
+    # All payload blocks, padding included (a part of a reply split over several frames fills
+    # its blocks; the header's payload length is then that of the whole reply).
+    body: bytes = b""
 
     @property
     def msg_type(self) -> int:
@@ -187,9 +192,12 @@ def wire_len(head: bytes) -> int:
     return HEADER_LEN + blocks * BLOCK
 
 
-def encode(frame: Frame, key: bytes, *, header_only: bool = False) -> bytes:
+def encode(
+    frame: Frame, key: bytes, *, header_only: bool = False, payload_len: int | None = None
+) -> bytes:
     """Fill in N, payload length and SHA-1, then encrypt. Header-only frames keep the header's
-    payload length (acknowledgements copy it from the frame they answer)."""
+    payload length (acknowledgements copy it from the frame they answer). `payload_len` overrides
+    the length (one part of a longer message)."""
     if header_only:
         blocks, payload = 0, b""
         header = replace(frame.header, blocks=0, sha1=bytes(SHA1_LEN))
@@ -199,7 +207,10 @@ def encode(frame: Frame, key: bytes, *, header_only: bool = False) -> bytes:
         if blocks > MAX_BLOCKS:
             raise FrameError(f"payload too large: {blocks} blocks")
         header = replace(
-            frame.header, blocks=blocks, payload_len=len(payload), sha1=bytes(SHA1_LEN)
+            frame.header,
+            blocks=blocks,
+            payload_len=len(payload) if payload_len is None else payload_len,
+            sha1=bytes(SHA1_LEN),
         )
     buf = bytearray(HEADER_LEN + blocks * BLOCK)
     buf[:HEADER_LEN] = header.to_bytes()
@@ -226,7 +237,11 @@ def decode(data: bytes, key: bytes) -> Frame:
     # The payload length is not checked against N: acknowledgements copy the header of the
     # frame they answer, so an ack can carry a payload length with N = 0.
     length = min(header.payload_len, total - HEADER_LEN)
-    return Frame(header=header, payload=bytes(buf[HEADER_LEN : HEADER_LEN + length]))
+    return Frame(
+        header=header,
+        payload=bytes(buf[HEADER_LEN : HEADER_LEN + length]),
+        body=bytes(buf[HEADER_LEN:]),
+    )
 
 
 def ack_for(frame: Frame, msg_type: int, *, zero_field_28: bool = False) -> Frame:

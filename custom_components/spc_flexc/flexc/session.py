@@ -4,7 +4,9 @@ The panel is the client. It opens a TCP connection to the receiver configured on
 server), sends Connect (0x00) or Reconnect (0x02), then polls (0x20) about every 8 s and pushes
 events (0x60). Commands go the other way as Data frames (0x80): the panel first acknowledges our
 request (0x81), then answers with its own Data frame (0x80), which we acknowledge (0x81). One
-command at a time.
+command at a time. A long answer is split over several Data frames: the first has field 0x28 set
+and the length of the whole answer, the others continue it; each one is acknowledged. A command
+the panel cannot take is answered with an error frame (0xFF).
 
 Connect gets a new random connection id and transaction id from us; Reconnect keeps the panel's.
 Our Data frames must carry that negotiated pair, or the panel ignores them.
@@ -45,6 +47,10 @@ class FlexcTimeout(FlexcError):
     """The panel did not answer a command in time."""
 
 
+class FlexcPanelError(FlexcError):
+    """The panel answered a command with an error frame (0xFF)."""
+
+
 def _random_conn_id() -> int:
     low, high = CONN_ID_RANGE
     return low + secrets.randbelow(high - low)
@@ -82,7 +88,10 @@ class FlexcServer:
         self._template: Header | None = None
         self._seq = SeqCounter()
         self._trans_id = 0
-        self._reply: asyncio.Future[Frame] | None = None
+        self._reply: asyncio.Future[bytes] | None = None
+        # The answer being put together from its Data frames, and its total length.
+        self._rx = bytearray()
+        self._rx_len: int | None = None
         self._send_lock = asyncio.Lock()
         self._transact_lock = asyncio.Lock()
         self._linked = False
@@ -182,6 +191,7 @@ class FlexcServer:
     def _drop(self) -> None:
         writer, self._writer = self._writer, None
         self._template = None
+        self._rx_len = None
         if writer is not None:
             writer.close()
         if self._reply is not None and not self._reply.done():
@@ -262,14 +272,42 @@ class FlexcServer:
                     self.on_event(xml)
                 except Exception:
                     _LOGGER.exception("FlexC event callback failed")
-        elif mt in (MsgType.DATA, MsgType.DATA_ACK):
-            reply = self._reply
-            # The panel acknowledges our request before it answers; only its Data frame is
+        elif mt == MsgType.DATA:
+            # Every Data frame from the panel is acknowledged, also one nobody waits for.
+            ack = fr.ack_for(frame, MsgType.DATA_ACK, zero_field_28=True)
+            ack.header = replace(ack.header, payload_len=min(frame.header.payload_len, REPLY_CHUNK))
+            await self._send(ack, header_only=True)
+            self._collect(frame)
+        elif mt == MsgType.DATA_ACK:
+            # The panel acknowledges our request before it answers; only its Data frames are
             # the answer.
-            if mt == MsgType.DATA and reply is not None and not reply.done():
-                reply.set_result(frame)
+            pass
+        elif mt == MsgType.ERROR:
+            err = FlexcPanelError(
+                f"the panel answered with an error frame (field 0x28 {frame.header.field_28.hex()})"
+            )
+            reply = self._reply
+            if reply is not None and not reply.done():
+                reply.set_exception(err)
+            else:
+                _LOGGER.warning("FlexC: %s", err)
         else:
             _LOGGER.debug("Ignoring FlexC message type 0x%02x", mt)
+
+    def _collect(self, frame: Frame) -> None:
+        """Add a Data frame to the answer; complete the waiting command when it is whole."""
+        reply = self._reply
+        if reply is None or reply.done():
+            _LOGGER.debug("Data frame with no command waiting (%d bytes)", len(frame.payload))
+            self._rx_len = None
+            return
+        if frame.header.field_28[:1] == b"\x01" or self._rx_len is None:
+            self._rx = bytearray()
+            self._rx_len = frame.header.payload_len
+        self._rx += frame.body
+        if len(self._rx) >= self._rx_len:
+            reply.set_result(bytes(self._rx[: self._rx_len]))
+            self._rx_len = None
 
     @staticmethod
     def _template_from(h: Header, conn_id: int, trans_id: int) -> Header:
@@ -299,19 +337,19 @@ class FlexcServer:
             )
             loop = asyncio.get_running_loop()
             self._reply = loop.create_future()
+            self._rx_len = None
             try:
                 await self._send(Frame(header=header, payload=payload))
                 try:
-                    reply = await asyncio.wait_for(self._reply, self._timeout)
+                    return await asyncio.wait_for(self._reply, self._timeout)
                 except TimeoutError as err:
+                    # A late answer could otherwise be taken for the answer to the next command:
+                    # drop the link, the panel reconnects within seconds.
+                    _LOGGER.debug("No answer in time, dropping the FlexC link")
+                    self._drop()
                     raise FlexcTimeout("the panel did not answer in time") from err
             finally:
                 self._reply = None
-            ack = fr.ack_for(reply, MsgType.DATA_ACK, zero_field_28=True)
-            ack.header = replace(ack.header, payload_len=min(reply.header.payload_len, REPLY_CHUNK))
-            with contextlib.suppress(FlexcNotConnected):
-                await self._send(ack, header_only=True)
-            return reply.payload
 
 
 def _first_string(payload: bytes) -> bytes:

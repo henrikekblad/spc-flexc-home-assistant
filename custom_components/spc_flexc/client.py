@@ -21,7 +21,7 @@ from homeassistant.util import dt as dt_util
 from .const import CONF_ACCOUNT_CODE, CONF_KEY, CONF_RCT_ID
 from .flexc import commands
 from .flexc.commands import Command
-from .flexc.session import FlexcNotConnected, FlexcServer, FlexcTimeout
+from .flexc.session import FlexcNotConnected, FlexcPanelError, FlexcServer, FlexcTimeout
 from .flexc.xmlconv import PanelError, event_to_dict, parse, reply_to_dict
 
 _LOGGER = logging.getLogger(__name__)
@@ -189,6 +189,9 @@ class SpcFlexcClient:
             raise SpcPanelNotConnected("the panel is not connected") from err
         except FlexcTimeout as err:
             raise SpcConnectionError("the panel did not answer") from err
+        except FlexcPanelError as err:
+            _LOGGER.debug("Command %s: %s", cmd.name, err)
+            raise SpcConnectionError(str(err)) from err
         xml = commands.reply_xml(reply)
         try:
             return reply_to_dict(xml, cmd.name, cmd.reply_element, self._tz)

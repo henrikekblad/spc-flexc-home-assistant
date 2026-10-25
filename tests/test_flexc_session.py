@@ -12,6 +12,7 @@ from custom_components.spc_flexc.flexc.frame import Frame, Header, MsgType
 from custom_components.spc_flexc.flexc.session import (
     CONN_ID_RANGE,
     FlexcNotConnected,
+    FlexcPanelError,
     FlexcServer,
     FlexcTimeout,
 )
@@ -44,8 +45,8 @@ class Panel:
             **kw,
         )
 
-    async def send(self, frame: Frame) -> None:
-        self.writer.write(fr.encode(frame, KEY))
+    async def send(self, frame: Frame, payload_len: int | None = None) -> None:
+        self.writer.write(fr.encode(frame, KEY, payload_len=payload_len))
         await self.writer.drain()
 
     async def recv(self) -> Frame:
@@ -167,12 +168,67 @@ async def test_reconnect_keeps_the_panels_ids(server: FlexcServer) -> None:
     await panel.close()
 
 
+async def test_reply_over_several_frames(server: FlexcServer) -> None:
+    panel = await _connect_and_poll(server)
+    answer = b"<FLEXML/>\x00<REPLY>" + b"z" * 50 + b"</REPLY>\x00"
+    first, rest = answer[:32], answer[32:]
+
+    async def reply() -> list[Frame]:
+        req = await panel.recv()
+        await panel.send(Frame(replace(req.header, msg_type=MsgType.DATA_ACK)))
+        # The first part has field 0x28 set and the length of the whole answer.
+        await panel.send(
+            Frame(panel.header(MsgType.DATA, field_28=b"\x01\x00\x00\x00"), first),
+            payload_len=len(answer),
+        )
+        acks = [await panel.recv()]
+        await panel.send(Frame(panel.header(MsgType.DATA), rest))
+        acks.append(await panel.recv())
+        return acks
+
+    task = asyncio.create_task(reply())
+    assert await server.transact(b"<CMD/>") == answer
+    acks = await task
+    assert [a.msg_type for a in acks] == [MsgType.DATA_ACK, MsgType.DATA_ACK]
+    await panel.close()
+
+
+async def test_unsolicited_data_is_acknowledged(server: FlexcServer) -> None:
+    panel = await _connect_and_poll(server)
+    data = Frame(panel.header(MsgType.DATA), b"<LATE/>\x00")
+    await panel.send(data)
+    ack = await panel.recv()
+    assert ack.msg_type == MsgType.DATA_ACK and ack.header.seq == data.header.seq
+    assert server.connected
+    await panel.close()
+
+
+async def test_error_frame_fails_the_command(server: FlexcServer) -> None:
+    panel = await _connect_and_poll(server)
+
+    async def refuse() -> None:
+        req = await panel.recv()
+        await panel.send(Frame(replace(req.header, msg_type=MsgType.ERROR)))
+
+    task = asyncio.create_task(refuse())
+    with pytest.raises(FlexcPanelError):
+        await server.transact(b"<CMD/>")
+    await task
+    assert server.connected
+    await panel.close()
+
+
 async def test_timeout_disconnect_and_wrong_ids(server: FlexcServer) -> None:
     with pytest.raises(FlexcNotConnected):
         await server.transact(b"x")
     panel = await _connect_and_poll(server)
     with pytest.raises(FlexcTimeout):
         await server.transact(b"x")
+    # The link is dropped, so a late answer cannot be taken for the next command's.
+    assert not server.connected and server.links[-1] is False  # type: ignore[attr-defined]
+    with pytest.raises((asyncio.IncompleteReadError, ConnectionError)):
+        await panel.recv()  # our request
+        await panel.recv()
     await panel.close()
     for _ in range(50):
         if not server.connected:
