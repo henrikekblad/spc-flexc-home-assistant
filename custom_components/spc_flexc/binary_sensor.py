@@ -18,7 +18,6 @@ from .entity import SpcEntity, SpcItemEntity
 
 # Zone types that say what the zone is, whatever it is called.
 _TYPE_CLASS = {
-    "1": BinarySensorDeviceClass.DOOR,  # entry/exit
     "3": BinarySensorDeviceClass.SMOKE,  # fire
     "4": BinarySensorDeviceClass.DOOR,  # fire exit
     "8": BinarySensorDeviceClass.TAMPER,
@@ -27,8 +26,14 @@ _TYPE_CLASS = {
     "17": BinarySensorDeviceClass.VIBRATION,  # seismic
 }
 
-# For general alarm/technical zones the name is the only hint (English words; anything else can
-# be set per entity with "Show as" in Home Assistant, see docs/zones.md).
+# An entry/exit zone is often a door, but just as often a motion detector in the hallway, so its
+# name goes first.
+_TYPE_FALLBACK = {
+    "1": BinarySensorDeviceClass.DOOR,  # entry/exit
+}
+
+# Otherwise the name is the hint (English words; anything else can be set per entity with
+# "Show as" in Home Assistant, see docs/zones.md).
 _NAME_CLASS = (
     (("motion", "pir"), BinarySensorDeviceClass.MOTION),
     (("glass",), BinarySensorDeviceClass.VIBRATION),
@@ -49,7 +54,7 @@ def zone_device_class(zone: dict[str, Any]) -> BinarySensorDeviceClass | None:
     for words, cls in _NAME_CLASS:
         if any(w in name for w in words):
             return cls
-    return None
+    return _TYPE_FALLBACK.get(zone.get("type", ""))
 
 
 async def async_setup_entry(

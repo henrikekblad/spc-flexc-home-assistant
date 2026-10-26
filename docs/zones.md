@@ -13,7 +13,6 @@ class like this:
 
    | Zone type | Device class |
    |---|---|
-   | Entry/exit | Door |
    | Fire | Smoke |
    | Fire exit | Door |
    | Tamper | Tamper |
@@ -38,7 +37,10 @@ class like this:
 
    If your zones are named in another language, or the guess is wrong, set it yourself (below).
 
-3. **Otherwise no device class**: the sensor shows plain on/off.
+3. **Otherwise an entry/exit zone becomes a door.** The name goes first because an entry/exit
+   zone is just as often a motion detector in the hallway ("Hall PIR" becomes motion).
+
+4. **Otherwise no device class**: the sensor shows plain on/off.
 
 ## Setting it yourself
 
