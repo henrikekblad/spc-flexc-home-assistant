@@ -202,7 +202,7 @@ async def test_unload_keeps_the_link(hass: HomeAssistant, setup_entry, panel: Si
         ({"type": "0", "zone_name": "Back door"}, "door"),
         ({"type": "1", "zone_name": "Anything"}, "door"),  # entry/exit, by type
         ({"type": "1", "zone_name": "Hallway PIR"}, "motion"),  # the name wins over entry/exit
-        ({"type": "4", "zone_name": "Fire exit"}, "door"),  # fire exit, by type (not "fire" from the name)
+        ({"type": "4", "zone_name": "Fire exit"}, "door"),  # fire exit, by type, not heat
         ({"type": "3", "zone_name": "Kitchen"}, "smoke"),  # fire, by type
         ({"type": "0", "zone_name": "Rörelse hall"}, None),
     ],
