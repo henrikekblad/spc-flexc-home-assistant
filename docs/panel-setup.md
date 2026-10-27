@@ -55,7 +55,12 @@ Go to **Communications → FlexC → Event Profiles** and click **Add**.
 - Name it, for example `Home Assistant`.
 - Tick the report box for every event type. You can narrow this down later.
 
-![Event profile with all event types reported](images/04-event-profile.png)
+![Event profile](images/04-event-profile.png)
+
+The screenshot is from a panel where a few groups are still off (Network, Engineer accessing
+system, Inhibits and Isolates, Zone Walk Test, Camera, Door Warnings). Turn them on as well; in
+particular **Inhibits and Isolates**, so that Home Assistant sees a zone being inhibited or
+isolated straight away instead of at the next poll.
 
 ## 4. Add a receiver for Home Assistant
 
